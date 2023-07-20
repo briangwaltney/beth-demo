@@ -5,9 +5,7 @@ const startClerk = async () => {
   const Clerk = window.Clerk;
   try {
     await Clerk.load();
-    if (Clerk.user) {
-      document.body.dispatchEvent(new Event("loggedIn"));
-    }
+    document.body.dispatchEvent(new Event("clerkLoaded"));
   } catch (err) {
     console.error("Error starting Clerk: ", err);
   }

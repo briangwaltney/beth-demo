@@ -1,20 +1,19 @@
 import { Elysia, t } from "elysia";
-import { html } from "@elysiajs/html";
 import * as elements from "typed-html";
 import db from "./db";
 import { Todo, todos } from "./db/schema";
 import { eq } from "drizzle-orm";
-import { Login } from "./components/Login";
-import auth from "./routes/login";
+import auth from "./routes/auth";
+import { setup } from "./routes/setup";
 
 const app = new Elysia()
-  .use(html())
+  .use(setup)
   .use(auth)
   .get("/", ({ html }) =>
     html(
       <BaseHtml>
         <body class="bg-slate-900 text-slate-50">
-          <Login />
+          <div hx-get="/auth" hx-trigger="clerkLoaded from:body" />
           <div
             hx-get="/todos"
             hx-trigger="load, newTodo from:body"
@@ -25,11 +24,11 @@ const app = new Elysia()
     ),
   )
   .post(
-    "/todos/toggle/:id",
+    "/todos/toggle/:id/:completed",
     async ({ params }) => {
       const todo = await db
         .update(todos)
-        .set({ completed: true })
+        .set({ completed: params.completed == "true" ? true : false })
         .where(eq(todos.id, params.id))
         .returning()
         .get();
@@ -40,6 +39,7 @@ const app = new Elysia()
     {
       params: t.Object({
         id: t.Numeric(),
+        completed: t.String(),
       }),
     },
   )
@@ -111,7 +111,7 @@ const TodoItem = ({ todo }: { todo: Todo }) => {
     <div class="flex flex-row space-x-3">
       <p>{todo.content}</p>
       <input
-        hx-post={`/todos/toggle/${todo.id}`}
+        hx-post={`/todos/toggle/${todo.id}/${!todo.completed}`}
         hx-target="closest div"
         hx-swap="outerHTML"
         type="checkbox"
