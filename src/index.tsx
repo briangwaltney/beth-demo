@@ -8,7 +8,6 @@ import { setup } from "./routes/setup";
 
 const app = new Elysia()
   .use(setup)
-  .use(auth)
   .get("/", ({ html }) =>
     html(
       <BaseHtml>
@@ -85,6 +84,7 @@ const app = new Elysia()
     const data = await db.select().from(todos).all();
     return <TodoList todos={data} />;
   })
+  .use(auth)
   .listen(3000);
 
 console.log(
